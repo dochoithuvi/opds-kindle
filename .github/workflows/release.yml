@@ -1,0 +1,82 @@
+name: Build and publish latest release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: contains(github.event.head_commit.message, '[release]')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set version
+        id: version
+        shell: bash
+        run: |
+          VERSION="$(head -n1 VERSION.txt | tr -d '\r\n ')"
+          if [ -z "$VERSION" ]; then VERSION="0.2.1"; fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Materialize backend source
+        shell: bash
+        run: |
+          cat backend/main.go.b64.* | tr -d '\r\n' | base64 -d > backend/main.go
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+
+      - name: Test backend
+        working-directory: backend
+        run: |
+          gofmt -w main.go
+          go test ./...
+
+      - name: Build ARM backends
+        shell: bash
+        run: |
+          mkdir -p build/bin
+          cd backend
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=5 go build -trimpath -ldflags='-s -w' -o ../build/bin/opds-arm5 .
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -trimpath -ldflags='-s -w' -o ../build/bin/opds-arm7 .
+
+      - name: Assemble FULL package
+        shell: bash
+        run: |
+          V="${{ steps.version.outputs.version }}"
+          ROOT="Kindle-OPDS-Library-${V}-FULL"
+          rm -rf "$ROOT"
+          mkdir -p "$ROOT/SOURCE/backend" "$ROOT/SOURCE/waf" "$ROOT/ASSETS"
+          mkdir -p "$ROOT/COPY_TO_KINDLE_ROOT/documents/OPDSLibrary/waf"
+          mkdir -p "$ROOT/COPY_TO_KINDLE_ROOT/documents/OPDSLibrary/bin"
+          cp backend/go.mod backend/main.go "$ROOT/SOURCE/backend/"
+          cp waf/* "$ROOT/SOURCE/waf/"
+          cp waf/* "$ROOT/COPY_TO_KINDLE_ROOT/documents/OPDSLibrary/waf/"
+          cp launcher/OPDSLibrary.sh "$ROOT/COPY_TO_KINDLE_ROOT/documents/OPDSLibrary.sh"
+          cp build/bin/opds-arm5 build/bin/opds-arm7 "$ROOT/COPY_TO_KINDLE_ROOT/documents/OPDSLibrary/bin/"
+          sed -n 's/^# Icon: data:image\/png;base64,//p' launcher/OPDSLibrary.sh | head -n1 | base64 -d > "$ROOT/ASSETS/OPDS-Library-icon.png"
+          cp README-FIRST.txt VERSION.txt COPYRIGHT.md "$ROOT/"
+          zip -r "Kindle-OPDS-Library-${V}-FULL-with-icon.zip" "$ROOT"
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          V="${{ steps.version.outputs.version }}"
+          TAG="${{ steps.version.outputs.tag }}"
+          ZIP="Kindle-OPDS-Library-${V}-FULL-with-icon.zip"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ZIP" --clobber
+            gh release edit "$TAG" --title "OPDS Library v${V}" --latest --notes-file README-FIRST.txt
+          else
+            gh release create "$TAG" "$ZIP" --target main --title "OPDS Library v${V}" --latest --notes-file README-FIRST.txt
+          fi

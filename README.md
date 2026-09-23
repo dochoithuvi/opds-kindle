@@ -1,27 +1,47 @@
 # OPDS Library for Kindle
 
-Native-library launcher and OPDS browser for jailbroken Kindle devices.
+A native-library OPDS browser and downloader for jailbroken Kindle devices.
 
-Current version: **0.2.1**
+**Current release: v0.2.1**  
+**Author: Dochoithuvi**
 
-## Highlights
-- Browse OPDS catalogs from the Kindle UI
-- Full-catalog search when the server exposes search
-- Download PDF, MOBI, AZW3, TXT
-- Download EPUB directly for **KOReader**
-- Large E-Ink-friendly controls
-- Includes ARMv5 and ARMv7 backends
-- UI credit: **by Dochoithuvi**
+## Features
 
-## Tested target
-Kindle Basic 2022, firmware 5.19.2. Other models/firmwares may behave differently.
+- Browse OPDS catalogs directly from a Kindle launcher.
+- Search the whole catalog when the OPDS server exposes OpenSearch.
+- Filter the current page by title or author.
+- Download **MOBI, AZW3, PDF and TXT** into Kindle `documents/`.
+- Download **EPUB** directly for reading with **KOReader**.
+- E-Ink-friendly large controls and paging buttons.
+- Includes static ARMv5 and ARMv7 backend builds in the release ZIP.
+- Keeps the backend on `127.0.0.1` and validates local WAF origins for download requests.
+
+## Tested device
+
+The current build has been tested on **Kindle Basic 2022, firmware 5.19.2**.
+Other Kindle models and firmware versions may behave differently.
 
 ## Install
-1. Copy the contents of `COPY_TO_KINDLE_ROOT/` to the Kindle USB root.
-2. Open `OPDSLibrary.sh` from the Kindle Library.
-3. Enter an OPDS catalog URL and open it.
 
-EPUB files are saved under Kindle `documents/` for KOReader. The stock Kindle Library may not index EPUB.
+1. Download the newest ZIP from **Releases**.
+2. Back up and remove an older `documents/OPDSLibrary/` and `documents/OPDSLibrary.sh` if present.
+3. Extract the ZIP.
+4. Copy the **contents** of `COPY_TO_KINDLE_ROOT/` to the Kindle USB root.
+5. Safely eject the Kindle and open **OPDS Library** from the native Library.
+
+EPUB downloads are intended for KOReader. The stock Kindle Library may not index EPUB files.
+
+## Source layout
+
+- `backend/` — local HTTP backend and OPDS parser/downloader.
+- `waf/` — Mesquite/WAF UI.
+- `launcher/OPDSLibrary.sh` — Kindle launcher and app registration.
+- `assets/` — launcher icon source encoded as base64 for release packaging.
 
 ## Status
-Experimental. Back up your current installation before replacing files.
+
+Experimental software for jailbroken Kindle devices. Back up your installation before replacing files.
+
+## Copyright
+
+Copyright © 2026 **Dochoithuvi**. All rights reserved. See [COPYRIGHT.md](COPYRIGHT.md).

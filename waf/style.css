@@ -1,0 +1,31 @@
+/* 0.2.1: large E-Ink UI, larger paging controls, compact actions. */
+html,body{margin:0;padding:0;width:100%;min-height:100%;}
+body{font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:1.42;color:#111;background:#f4f4f4;}
+main{width:100%;max-width:none;margin:0;padding:0;min-height:100%;}
+header{background:#161616;color:#fff;padding:20px 18px;}
+h1{font-size:32px;line-height:1.15;margin:0;letter-spacing:.4px;}
+header p{font-size:20px;margin:7px 0 0;}
+.block{padding:18px;border-bottom:1px solid #888;background:#fff;}
+.searchBlock{background:#f7f7f7;}
+label{display:block;font-size:24px;font-weight:bold;margin-bottom:10px;}
+input{display:block;box-sizing:border-box;width:100%;padding:15px 11px;font-size:24px;line-height:1.3;border:2px solid #333;background:#fff;color:#111;border-radius:0;}
+.actions{margin:11px 0 2px;white-space:normal;}
+button{display:inline-block;box-sizing:border-box;width:auto;min-width:145px;min-height:58px;padding:12px 18px;margin:0 10px 8px 0;background:#161616;color:#fff;border:2px solid #161616;border-radius:0;font-size:23px;line-height:1.2;font-weight:bold;text-align:center;vertical-align:top;}
+button.secondary{background:#fff;color:#111;}
+button:disabled{background:#eee;color:#777;border-color:#bbb;}
+#open{min-width:145px;}
+#searchAll{min-width:220px;}
+#filterPage{min-width:185px;}
+#clearSearch{min-width:135px;}
+.navActions{padding:4px 0 2px;}
+.navActions button{min-width:265px;min-height:74px;font-size:25px;padding:16px 20px;margin-bottom:10px;}
+#status{padding:8px 0 2px;font-size:21px;line-height:1.42;word-wrap:break-word;}
+h2{font-size:28px;line-height:1.25;margin:18px 0 12px;}
+#items>p{font-size:22px;}
+.entry{padding:16px;margin:12px 0;border:2px solid #aaa;background:#fff;word-wrap:break-word;}
+.entry h3{font-size:26px;line-height:1.3;margin:0 0 8px;}
+.entry p{font-size:21px;line-height:1.4;margin:8px 0;}
+.entry button{font-size:22px;min-width:185px;min-height:58px;margin:9px 10px 4px 0;padding:11px 15px;}
+footer{padding:18px;font-size:18px;line-height:1.4;color:#333;}
+
+.credit{margin-top:4px;font-size:18px;font-weight:bold;letter-spacing:.3px;color:#ddd}

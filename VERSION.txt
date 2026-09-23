@@ -1,0 +1,2 @@
+0.2.1
+EPUB download for KOReader + by Dochoithuvi
