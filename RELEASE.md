@@ -7,3 +7,5 @@ Current release: **v0.2.1**
 - EPUB downloads are supported for KOReader.
 - UI credit: **by Dochoithuvi**.
 - Copyright © 2026 Dochoithuvi. All rights reserved.
+
+Release build: retry 2 (source reconstruction fixed).
