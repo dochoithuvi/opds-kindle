@@ -31,7 +31,11 @@ jobs:
             backend/main.go.b64.01 \
             backend/main.go.b64.02 \
             backend/main.go.b64.03a \
-            backend/main.go.b64.03b \
+            backend/main.go.b64.03b1a \
+            backend/main.go.b64.03b1b \
+            backend/main.go.b64.03b2 \
+            backend/main.go.b64.03b3 \
+            backend/main.go.b64.03b4 \
             backend/main.go.b64.04 \
             backend/main.go.b64.05 \
             | tr -d '\r\n' | base64 -d > backend/main.go
