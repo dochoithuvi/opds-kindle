@@ -8,4 +8,4 @@ Current release: **v0.2.1**
 - UI credit: **by Dochoithuvi**.
 - Copyright © 2026 Dochoithuvi. All rights reserved.
 
-Release build: retry 2 (source reconstruction fixed).
+Release build: retry 3 (verified chunk ordering).
