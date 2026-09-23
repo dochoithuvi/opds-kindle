@@ -1,2 +1,2 @@
-0.2.1
-EPUB download for KOReader + by Dochoithuvi
+0.2.2
+Hidden default catalog URL + multi-catalog manager + persistent catalogs.json

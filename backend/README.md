@@ -1,7 +1,13 @@
-# Backend source
+# Backend
 
-The tested `main.go` source is stored as split Base64 text chunks. This was used for the initial publication because the repository connector handles text blobs only.
+Local loopback backend for OPDS Library for Kindle.
 
-The release workflow reconstructs the source in an explicit order and then runs `gofmt` and `go test` before building ARM binaries. Release archives include the decoded `SOURCE/backend/main.go`.
+- Listens only on 127.0.0.1:18765.
+- Parses OPDS 1 Atom and basic OPDS 2 JSON feeds.
+- Sanitizes invalid XML 1.0 control characters found in some public feeds.
+- Supports catalog search discovery/OpenSearch.
+- Downloads PDF, MOBI, AZW3, TXT, and EPUB with file-container validation.
+- Stores custom OPDS sources in documents/OPDSLibrary/catalogs.json.
+- Keeps the built-in catalog URL out of the WAF/UI catalog-list response.
 
-Do not concatenate the chunks with a wildcard; use the order in `.github/workflows/release.yml`.
+The v0.2.2 release workflow materializes the v0.2.1 source bundle and applies backend/v0.2.2.patch before testing and building.

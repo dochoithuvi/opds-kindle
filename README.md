@@ -2,12 +2,15 @@
 
 A native-library OPDS browser and downloader for jailbroken Kindle devices.
 
-**Current release: v0.2.1**  
+**Current release: v0.2.2**  
 **Author: Dochoithuvi**
 
 ## Features
 
 - Browse OPDS catalogs directly from a Kindle launcher.
+- Built-in default catalog is shown only as **Kho sách mặc định**; its URL is hidden from the Kindle UI.
+- Add, edit, delete, and switch between custom OPDS catalogs using friendly names.
+- Custom catalogs and the selected source persist in `documents/OPDSLibrary/catalogs.json`.
 - Search the whole catalog when the OPDS server exposes OpenSearch.
 - Filter the current page by title or author.
 - Download **MOBI, AZW3, PDF and TXT** into Kindle `documents/`.
@@ -30,6 +33,10 @@ Other Kindle models and firmware versions may behave differently.
 5. Safely eject the Kindle and open **OPDS Library** from the native Library.
 
 EPUB downloads are intended for KOReader. The stock Kindle Library may not index EPUB files.
+
+## Catalog privacy
+
+The built-in OPDS URL is hidden from the device UI, but it is not a secret and remains visible in the public source code. Custom catalog URLs are stored locally in `documents/OPDSLibrary/catalogs.json`.
 
 ## Source layout
 

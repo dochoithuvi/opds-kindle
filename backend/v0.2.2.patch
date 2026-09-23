@@ -1,0 +1,315 @@
+--- a/backend/main.go
++++ b/backend/main.go
+@@ -25,9 +25,12 @@
+ )
+ 
+ const (
+-	listenAddr = "127.0.0.1:18765"
+-	catalogMax = 4 << 20
+-	bookMax    = 80 << 20
++	listenAddr         = "127.0.0.1:18765"
++	catalogMax         = 4 << 20
++	bookMax            = 80 << 20
++	defaultCatalogID   = "default"
++	defaultCatalogName = "Kho sách mặc định"
++	defaultCatalogURL  = "https://khosach.mnd.vn/api/opds/"
+ )
+ 
+ var docDir = envDefault("OPDS_DOCUMENTS", "/mnt/us/documents")
+@@ -35,6 +38,28 @@
+ var catalogClient = &http.Client{Timeout: 35 * time.Second, CheckRedirect: checkRedirect, Jar: sharedJar}
+ var downloadClient = &http.Client{Timeout: 5 * time.Minute, CheckRedirect: checkRedirect, Jar: sharedJar}
+ var downloadMu sync.Mutex
++var catalogMu sync.Mutex
++
++type savedCatalog struct {
++	ID   string `json:"id"`
++	Name string `json:"name"`
++	URL  string `json:"url"`
++}
++type catalogStore struct {
++	Selected string         `json:"selected"`
++	Catalogs []savedCatalog `json:"catalogs"`
++}
++type catalogView struct {
++	ID       string `json:"id"`
++	Name     string `json:"name"`
++	URL      string `json:"url,omitempty"`
++	Builtin  bool   `json:"builtin,omitempty"`
++	Selected bool   `json:"selected,omitempty"`
++}
++type catalogsResponse struct {
++	Selected string        `json:"selected"`
++	Catalogs []catalogView `json:"catalogs"`
++}
+ 
+ type atomLink struct {
+ 	Rel   string `xml:"rel,attr"`
+@@ -125,6 +150,207 @@
+ 	}
+ 	return fallback
+ }
++func catalogStorePath() string {
++	return filepath.Join(docDir, "OPDSLibrary", "catalogs.json")
++}
++func defaultStore() catalogStore {
++	return catalogStore{Selected: defaultCatalogID, Catalogs: []savedCatalog{}}
++}
++func cleanCatalogName(name string) string {
++	name = strings.TrimSpace(name)
++	if len([]rune(name)) > 48 {
++		r := []rune(name)
++		name = string(r[:48])
++	}
++	return name
++}
++func normalizeStore(s *catalogStore) {
++	if s.Catalogs == nil {
++		s.Catalogs = []savedCatalog{}
++	}
++	out := make([]savedCatalog, 0, len(s.Catalogs))
++	seen := map[string]bool{}
++	selectedOK := s.Selected == defaultCatalogID
++	for _, c := range s.Catalogs {
++		c.ID = strings.TrimSpace(c.ID)
++		c.Name = cleanCatalogName(c.Name)
++		c.URL = strings.TrimSpace(c.URL)
++		if c.ID == "" || c.ID == defaultCatalogID || seen[c.ID] || c.Name == "" {
++			continue
++		}
++		if _, err := validURL(c.URL); err != nil {
++			continue
++		}
++		seen[c.ID] = true
++		out = append(out, c)
++		if s.Selected == c.ID {
++			selectedOK = true
++		}
++	}
++	s.Catalogs = out
++	if !selectedOK {
++		s.Selected = defaultCatalogID
++	}
++}
++func readCatalogStoreUnlocked() catalogStore {
++	s := defaultStore()
++	b, err := os.ReadFile(catalogStorePath())
++	if err != nil {
++		return s
++	}
++	if json.Unmarshal(b, &s) != nil {
++		return defaultStore()
++	}
++	normalizeStore(&s)
++	return s
++}
++func writeCatalogStoreUnlocked(s catalogStore) error {
++	normalizeStore(&s)
++	dir := filepath.Dir(catalogStorePath())
++	if err := os.MkdirAll(dir, 0755); err != nil {
++		return err
++	}
++	b, err := json.MarshalIndent(s, "", "  ")
++	if err != nil {
++		return err
++	}
++	tmp, err := os.CreateTemp(dir, ".catalogs-*")
++	if err != nil {
++		return err
++	}
++	name := tmp.Name()
++	defer os.Remove(name)
++	_ = tmp.Chmod(0600)
++	if _, err = tmp.Write(append(b, '\n')); err != nil {
++		tmp.Close()
++		return err
++	}
++	if err = tmp.Sync(); err != nil {
++		tmp.Close()
++		return err
++	}
++	if err = tmp.Close(); err != nil {
++		return err
++	}
++	return os.Rename(name, catalogStorePath())
++}
++func storeViews(s catalogStore) catalogsResponse {
++	views := []catalogView{{ID: defaultCatalogID, Name: defaultCatalogName, Builtin: true, Selected: s.Selected == defaultCatalogID}}
++	for _, c := range s.Catalogs {
++		views = append(views, catalogView{ID: c.ID, Name: c.Name, URL: c.URL, Selected: s.Selected == c.ID})
++	}
++	return catalogsResponse{Selected: s.Selected, Catalogs: views}
++}
++func findCatalogIndex(s catalogStore, id string) int {
++	for i, c := range s.Catalogs {
++		if c.ID == id {
++			return i
++		}
++	}
++	return -1
++}
++func resolveSourceURL(id string) (string, error) {
++	if id == "" || id == defaultCatalogID {
++		return defaultCatalogURL, nil
++	}
++	catalogMu.Lock()
++	defer catalogMu.Unlock()
++	s := readCatalogStoreUnlocked()
++	for _, c := range s.Catalogs {
++		if c.ID == id {
++			return c.URL, nil
++		}
++	}
++	return "", errors.New("catalog source not found")
++}
++func catalogsHandler(w http.ResponseWriter, r *http.Request) {
++	catalogMu.Lock()
++	defer catalogMu.Unlock()
++	s := readCatalogStoreUnlocked()
++	if r.Method == http.MethodGet {
++		jsonReply(w, 200, storeViews(s))
++		return
++	}
++	if r.Method != http.MethodPost || r.Header.Get("X-OPDS-Library") != "1" {
++		fail(w, 405, errors.New("GET or OPDS Library POST required"))
++		return
++	}
++	var in struct {
++		Action string `json:"action"`
++		ID     string `json:"id"`
++		Name   string `json:"name"`
++		URL    string `json:"url"`
++	}
++	if err := json.NewDecoder(io.LimitReader(r.Body, 16<<10)).Decode(&in); err != nil {
++		fail(w, 400, err)
++		return
++	}
++	in.Action = strings.ToLower(strings.TrimSpace(in.Action))
++	in.ID = strings.TrimSpace(in.ID)
++	in.Name = cleanCatalogName(in.Name)
++	in.URL = strings.TrimSpace(in.URL)
++	switch in.Action {
++	case "select":
++		if in.ID == defaultCatalogID {
++			s.Selected = defaultCatalogID
++		} else if findCatalogIndex(s, in.ID) >= 0 {
++			s.Selected = in.ID
++		} else {
++			fail(w, 404, errors.New("catalog source not found"))
++			return
++		}
++	case "add":
++		if in.Name == "" {
++			fail(w, 400, errors.New("catalog name is required"))
++			return
++		}
++		if _, err := validURL(in.URL); err != nil {
++			fail(w, 400, err)
++			return
++		}
++		h := sha256.Sum256([]byte(in.Name + "\x00" + in.URL + "\x00" + time.Now().UTC().String()))
++		id := "c-" + hex.EncodeToString(h[:6])
++		s.Catalogs = append(s.Catalogs, savedCatalog{ID: id, Name: in.Name, URL: in.URL})
++	case "update":
++		idx := findCatalogIndex(s, in.ID)
++		if idx < 0 {
++			fail(w, 404, errors.New("catalog source not found"))
++			return
++		}
++		if in.Name == "" {
++			fail(w, 400, errors.New("catalog name is required"))
++			return
++		}
++		if _, err := validURL(in.URL); err != nil {
++			fail(w, 400, err)
++			return
++		}
++		s.Catalogs[idx].Name = in.Name
++		s.Catalogs[idx].URL = in.URL
++	case "delete":
++		if in.ID == defaultCatalogID {
++			fail(w, 400, errors.New("default catalog cannot be deleted"))
++			return
++		}
++		idx := findCatalogIndex(s, in.ID)
++		if idx < 0 {
++			fail(w, 404, errors.New("catalog source not found"))
++			return
++		}
++		s.Catalogs = append(s.Catalogs[:idx], s.Catalogs[idx+1:]...)
++		if s.Selected == in.ID {
++			s.Selected = defaultCatalogID
++		}
++	default:
++		fail(w, 400, errors.New("unknown catalog action"))
++		return
++	}
++	if err := writeCatalogStoreUnlocked(s); err != nil {
++		fail(w, 500, err)
++		return
++	}
++	jsonReply(w, 200, storeViews(s))
++}
+ func validURL(raw string) (*url.URL, error) {
+ 	u, e := url.Parse(strings.TrimSpace(raw))
+ 	if e != nil || u == nil || !(u.Scheme == "https" || u.Scheme == "http") || u.Hostname() == "" || u.User != nil {
+@@ -210,7 +436,7 @@
+ 	}
+ }
+ func browserUA() string {
+-	return "Mozilla/5.0 (Linux; U; en-US) AppleWebKit/533.16 (KHTML, like Gecko) Kindle/5.19 Safari/533.16 OPDSLibrary/0.2.1"
++	return "Mozilla/5.0 (Linux; U; en-US) AppleWebKit/533.16 (KHTML, like Gecko) Kindle/5.19 Safari/533.16 OPDSLibrary/0.2.2"
+ }
+ func getRemote(raw string, limit int64, client *http.Client) ([]byte, error) {
+ 	u, e := validURL(raw)
+@@ -547,6 +773,14 @@
+ 		return
+ 	}
+ 	catalog := r.URL.Query().Get("catalog")
++	if source := strings.TrimSpace(r.URL.Query().Get("source")); source != "" {
++		var err error
++		catalog, err = resolveSourceURL(source)
++		if err != nil {
++			fail(w, 404, err)
++			return
++		}
++	}
+ 	q := strings.TrimSpace(r.URL.Query().Get("q"))
+ 	if q == "" {
+ 		fail(w, 400, errors.New("search text is empty"))
+@@ -604,6 +838,18 @@
+ 		return
+ 	}
+ 	raw := r.URL.Query().Get("url")
++	if source := strings.TrimSpace(r.URL.Query().Get("source")); source != "" {
++		var err error
++		raw, err = resolveSourceURL(source)
++		if err != nil {
++			fail(w, 404, err)
++			return
++		}
++	}
++	if strings.TrimSpace(raw) == "" {
++		fail(w, 400, errors.New("catalog URL or source is required"))
++		return
++	}
+ 	b, e := getRemote(raw, catalogMax, catalogClient)
+ 	if e != nil {
+ 		fail(w, 400, e)
+@@ -822,7 +1068,7 @@
+ 	jsonReply(w, 200, map[string]interface{}{"books": out})
+ }
+ func healthHandler(w http.ResponseWriter, r *http.Request) {
+-	jsonReply(w, 200, map[string]interface{}{"status": "ok", "version": "0.2.1", "documents": docDir})
++	jsonReply(w, 200, map[string]interface{}{"status": "ok", "version": "0.2.2", "documents": docDir})
+ }
+ func main() {
+ 	if len(os.Args) > 1 && os.Args[1] == "--check" {
+@@ -834,6 +1080,7 @@
+ 	}
+ 	mux := http.NewServeMux()
+ 	mux.HandleFunc("/api/health", cors(healthHandler))
++	mux.HandleFunc("/api/catalogs", cors(catalogsHandler))
+ 	mux.HandleFunc("/api/catalog", cors(catalogHandler))
+ 	mux.HandleFunc("/api/search", cors(searchHandler))
+ 	mux.HandleFunc("/api/download", cors(downloadHandler))

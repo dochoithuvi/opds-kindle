@@ -1,16 +1,27 @@
 <!doctype html>
-<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>OPDS Library 0.2.1</title><link rel="stylesheet" href="style.css"></head>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>OPDS Library 0.2.2</title><link rel="stylesheet" href="style.css"></head>
 <body><main>
-<header><h1>OPDS LIBRARY</h1><p>0.2.1 - tải EPUB cho KOReader</p><p class="credit">by Dochoithuvi</p></header>
-<div class="block"><label for="catalog">Địa chỉ danh mục OPDS</label>
-<input id="catalog" type="text" value="https://khosach.mnd.vn/api/opds/" placeholder="https://.../opds">
-<div class="actions"><button id="open" type="button">MỞ</button></div>
-<p id="status" role="status">Sẵn sàng mở danh mục.</p></div>
+<header><h1>OPDS LIBRARY</h1><p>0.2.2 - quản lý nhiều kho sách</p><p class="credit">by Dochoithuvi</p></header>
+<div class="block sourceBlock">
+<label>Kho sách</label>
+<div class="actions sourceActions"><button id="catalogMenu" type="button" class="sourceButton">KHO SÁCH MẶC ĐỊNH ▾</button><button id="open" type="button">MỞ KHO</button></div>
+<div id="catalogPanel" class="catalogPanel hidden">
+  <div id="catalogList"></div>
+  <div class="actions"><button id="showAdd" type="button" class="secondary">+ THÊM KHO</button></div>
+  <div id="catalogEditor" class="catalogEditor hidden">
+    <label for="catalogName">Tên kho</label>
+    <input id="catalogName" type="text" maxlength="48" placeholder="Ví dụ: Kho cá nhân">
+    <label for="catalogURL">Địa chỉ OPDS</label>
+    <input id="catalogURL" type="text" placeholder="https://.../opds">
+    <div class="actions"><button id="saveCatalog" type="button">LƯU KHO</button><button id="cancelCatalog" type="button" class="secondary">HỦY</button></div>
+  </div>
+</div>
+<p id="status" role="status">Sẵn sàng mở kho sách.</p></div>
 <div class="block searchBlock"><label for="search">Tìm sách</label>
 <input id="search" type="text" placeholder="Nhập tên sách hoặc tác giả">
 <div class="actions"><button id="searchAll" type="button">TÌM TOÀN KHO</button><button id="filterPage" type="button" class="secondary">LỌC TRANG</button><button id="clearSearch" type="button" class="secondary">XÓA</button></div></div>
 <div class="block">
 <div class="actions navActions"><button id="back" type="button" disabled>← TRANG TRƯỚC</button><button id="next" type="button" disabled>TRANG TIẾP →</button></div>
 <h2 id="heading">Sách và thư mục</h2><div id="items"><p>Chưa có dữ liệu.</p></div></div>
-<footer>PDF, MOBI, AZW3, TXT và EPUB đều có thể tải về Kindle documents. EPUB dành cho KOReader; Kindle Library gốc có thể không hiển thị EPUB.</footer>
+<footer>Kho mặc định được dùng sẵn nhưng URL được ẩn khỏi giao diện. Có thể thêm kho OPDS khác và chạm tên kho để chuyển. EPUB tải về dành cho KOReader.</footer>
 </main><script src="app.js"></script></body></html>

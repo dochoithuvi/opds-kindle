@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<widget id="com.kindleopds.library" version="0.2.1" viewmodes="application" xmlns="http://www.w3.org/ns/widgets" xmlns:kindle="http://kindle.amazon.com/ns/widget-extensions">
+<widget id="com.kindleopds.library" version="0.2.2" viewmodes="application" xmlns="http://www.w3.org/ns/widgets" xmlns:kindle="http://kindle.amazon.com/ns/widget-extensions">
   <name xml:lang="en">OPDS Library</name>
   <description xml:lang="en">OPDS catalog browser for native Kindle books</description>
   <content src="index.html" />
