@@ -27,12 +27,20 @@ jobs:
       - name: Materialize backend source
         shell: bash
         run: |
-          cat backend/main.go.b64.* | tr -d '\r\n' | base64 -d > backend/main.go
+          cat \
+            backend/main.go.b64.01 \
+            backend/main.go.b64.02 \
+            backend/main.go.b64.03a \
+            backend/main.go.b64.03b \
+            backend/main.go.b64.04 \
+            backend/main.go.b64.05 \
+            | tr -d '\r\n' | base64 -d > backend/main.go
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.24.x'
+          cache: false
 
       - name: Test backend
         working-directory: backend
