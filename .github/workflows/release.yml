@@ -20,8 +20,19 @@ jobs:
         shell: bash
         run: |
           VERSION="$(head -n1 VERSION.txt | tr -d '\r\n ')"
-                    echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          test -n "$VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check WAF syntax and manifest
+        shell: bash
+        run: |
+          node --check waf/app.js
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+          ET.parse("waf/config.xml")
+          print("config.xml OK")
+          PY
 
       - name: Materialize backend source
         shell: bash
@@ -39,6 +50,7 @@ jobs:
             backend/main.go.b64.05 \
             | tr -d '\r\n' | base64 -d > backend/main.go
           patch -p1 < backend/v0.2.2.patch
+          patch -p1 < backend/v0.2.3.patch
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -51,6 +63,7 @@ jobs:
         run: |
           gofmt -w main.go
           go test ./...
+          go vet ./...
 
       - name: Build ARM backends
         shell: bash
@@ -78,6 +91,14 @@ jobs:
           sed -n 's/^# Icon: data:image\/png;base64,//p' launcher/OPDSLibrary.sh | head -n1 | base64 -d > "$ROOT/ASSETS/OPDS-Library-icon.png"
           cp README-FIRST.txt VERSION.txt COPYRIGHT.md LICENSE "$ROOT/"
           zip -r "Kindle-OPDS-Library-${V}-FULL-with-icon.zip" "$ROOT"
+
+      - name: Verify release ZIP
+        shell: bash
+        run: |
+          V="${{ steps.version.outputs.version }}"
+          ZIP="Kindle-OPDS-Library-${V}-FULL-with-icon.zip"
+          unzip -t "$ZIP"
+          test -s "$ZIP"
 
       - name: Create or update GitHub Release
         env:
