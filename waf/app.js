@@ -1,4 +1,4 @@
-/* OPDS Library 0.2.2. ES5 only. */
+/* OPDS Library 0.2.3. ES5 only. */
 (function () {
   'use strict';
   var BASE = 'http://127.0.0.1:18765';
