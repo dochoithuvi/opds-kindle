@@ -1,2 +1,2 @@
-0.2.2
-Hidden default catalog URL + multi-catalog manager + persistent catalogs.json
+0.2.3
+UI credit: By Maydocsach.gitbook.io; verified v0.2.2 feature set
