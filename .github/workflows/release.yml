@@ -69,7 +69,7 @@ jobs:
           mkdir -p "$ROOT/SOURCE/backend" "$ROOT/SOURCE/waf" "$ROOT/SOURCE/launcher" "$ROOT/ASSETS"
           mkdir -p "$ROOT/COPY_TO_KINDLE_ROOT/documents/OPDSLibrary/waf"
           mkdir -p "$ROOT/COPY_TO_KINDLE_ROOT/documents/OPDSLibrary/bin"
-          cp backend/go.mod backend/main.go backend/README.md backend/v0.2.2.patch "$ROOT/SOURCE/backend/"
+          cp backend/go.mod backend/main.go backend/README.md backend/v0.2.2.patch backend/v0.2.3.patch "$ROOT/SOURCE/backend/"
           cp waf/* "$ROOT/SOURCE/waf/"
           cp launcher/OPDSLibrary.sh "$ROOT/SOURCE/launcher/"
           cp waf/* "$ROOT/COPY_TO_KINDLE_ROOT/documents/OPDSLibrary/waf/"
