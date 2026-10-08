@@ -2,8 +2,9 @@
 
 A native-library OPDS browser and downloader for jailbroken Kindle devices.
 
-**Current release: v0.2.2**  
-**Author: Dochoithuvi**
+**Current release: v0.2.3**  
+**Author: Dochoithuvi**  
+**UI credit: By Maydocsach.gitbook.io**
 
 ## Features
 
@@ -21,13 +22,13 @@ A native-library OPDS browser and downloader for jailbroken Kindle devices.
 
 ## Tested device
 
-The current build has been tested on **Kindle Basic 2022, firmware 5.19.2**.
+The current codebase has been tested on **Kindle Basic 2022, firmware 5.19.2**.
 Other Kindle models and firmware versions may behave differently.
 
 ## Install
 
 1. Download the newest ZIP from **Releases**.
-2. Back up and remove an older `documents/OPDSLibrary/` and `documents/OPDSLibrary.sh` if present.
+2. Back up `documents/OPDSLibrary/catalogs.json` if you want to keep custom catalogs.
 3. Extract the ZIP.
 4. Copy the **contents** of `COPY_TO_KINDLE_ROOT/` to the Kindle USB root.
 5. Safely eject the Kindle and open **OPDS Library** from the native Library.
@@ -51,4 +52,4 @@ Experimental software for jailbroken Kindle devices. Back up your installation b
 
 ## Copyright
 
-Copyright © 2026 **Dochoithuvi**. All rights reserved. See [COPYRIGHT.md](COPYRIGHT.md).
+Copyright © 2026 **Dochoithuvi**. Licensed under **GPL-3.0**. See [COPYRIGHT.md](COPYRIGHT.md).
