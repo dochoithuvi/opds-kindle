@@ -1,0 +1,20 @@
+--- a/backend/main.go
++++ b/backend/main.go
+@@ -436,7 +436,7 @@
+ 	}
+ }
+ func browserUA() string {
+-	return "Mozilla/5.0 (Linux; U; en-US) AppleWebKit/533.16 (KHTML, like Gecko) Kindle/5.19 Safari/533.16 OPDSLibrary/0.2.2"
++	return "Mozilla/5.0 (Linux; U; en-US) AppleWebKit/533.16 (KHTML, like Gecko) Kindle/5.19 Safari/533.16 OPDSLibrary/0.2.3"
+ }
+ func getRemote(raw string, limit int64, client *http.Client) ([]byte, error) {
+ 	u, e := validURL(raw)
+@@ -1068,7 +1068,7 @@
+ 	jsonReply(w, 200, map[string]interface{}{"books": out})
+ }
+ func healthHandler(w http.ResponseWriter, r *http.Request) {
+-	jsonReply(w, 200, map[string]interface{}{"status": "ok", "version": "0.2.2", "documents": docDir})
++	jsonReply(w, 200, map[string]interface{}{"status": "ok", "version": "0.2.3", "documents": docDir})
+ }
+ func main() {
+ 	if len(os.Args) > 1 && os.Args[1] == "--check" {
